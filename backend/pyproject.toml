@@ -1,0 +1,9 @@
+[project]
+name = "ai-test-platform"
+version = "0.1.0"
+description = "AI 智能测试平台 — Web 用例自动执行 & 禅道集成"
+requires-python = ">=3.11"
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"

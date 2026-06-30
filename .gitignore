@@ -1,0 +1,33 @@
+# 环境变量文件 — 含敏感信息
+.env
+*.env
+!.env.example
+
+# Dependencies
+node_modules/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# IDE
+.idea/
+.vscode/
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build output
+dist/
+build/
+
+# Uploads & Logs
+uploads/
+logs/
+
+# Celery
+celerybeat-schedule
+
+# Redis
+dump.rdb

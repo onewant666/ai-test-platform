@@ -1,0 +1,100 @@
+name: Self Test
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Test mode'
+        required: true
+        type: choice
+        default: 'api'
+        options:
+          - api
+          - browser
+
+jobs:
+  self-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── Frontend ──
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      # ── Backend ──
+      - name: Setup Docker Compose
+        run: |
+          cd backend/docker
+          cp .env.example .env
+          # Use test-safe credentials
+          cat >> .env << 'EOF'
+          MYSQL_ROOT_PASSWORD=SelfTest123!
+          JWT_SECRET_KEY=self-test-jwt-secret-not-for-production
+          EOF
+
+      - name: Start platform
+        run: |
+          cd backend/docker
+          docker compose up -d --build
+
+      - name: Wait for backend
+        timeout-minutes: 3
+        run: |
+          for i in $(seq 1 30); do
+            if curl -s http://localhost:8000/health 2>/dev/null | grep -q ok; then
+              echo "Backend is ready!"
+              exit 0
+            fi
+            echo "Waiting for backend... (attempt $i/30)"
+            sleep 5
+          done
+          echo "::error::Backend failed to start"
+          docker compose -f backend/docker/docker-compose.yml logs --tail=50
+          exit 1
+
+      # ── Self Test ──
+      - name: Run self-test (API mode)
+        if: ${{ github.event.inputs.mode != 'browser' }}
+        run: python self_test.py --mode api --ci
+
+      - name: Run self-test (Browser mode)
+        if: ${{ github.event.inputs.mode == 'browser' }}
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+        run: |
+          # Browser mode needs LLM API key
+          if [ -z "$LLM_API_KEY" ]; then
+            echo "::warning::LLM_API_KEY secret not set, falling back to API mode"
+            python self_test.py --mode api --ci
+          else
+            python self_test.py --mode browser --ci --frontend-url http://frontend --max-wait 180
+          fi
+
+      # ── Cleanup ──
+      - name: Docker logs on failure
+        if: failure()
+        run: |
+          docker compose -f backend/docker/docker-compose.yml logs --tail=100
+
+      - name: Shutdown
+        if: always()
+        run: |
+          docker compose -f backend/docker/docker-compose.yml down -v
