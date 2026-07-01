@@ -2,30 +2,6 @@
 
 **Web 用例自动执行 & 禅道集成** — AI 驱动的浏览器自动化测试平台
 
-## 架构概览
-
-```
-┌─────────────────┐     ┌──────────────────┐     ┌──────────────┐
-│   React 前端     │────▶│  FastAPI 后端     │────▶│   MySQL 数据库 │
-│   (Ant Design)   │◀────│  (REST + WS)      │◀────│   Redis 缓存   │
-└─────────────────┘     └────────┬─────────┘     └──────────────┘
-                                 │
-                        ┌────────▼─────────┐
-                        │   Celery Worker   │
-                        │  (异步任务执行)    │
-                        └────────┬─────────┘
-                                 │
-                        ┌────────▼─────────┐
-                        │  Playwright + LLM │
-                        │  (AI 浏览器代理)   │
-                        └────────┬─────────┘
-                                 │
-                        ┌────────▼─────────┐
-                        │   禅道 API 集成    │
-                        │ (用例同步/Bug回写) │
-                        └──────────────────┘
-```
-
 ## 核心功能
 
 - **AI 驱动测试执行**: 使用 LLM 决策 + Playwright 浏览器自动化执行 Web 测试用例
@@ -147,10 +123,10 @@ celery -A app.celery_app worker --loglevel=info
 
 ## 技术栈
 
-- **后端**: Python 3.12+ / FastAPI / SQLAlchemy / Celery / Playwright
-- **前端**: React 19 / TypeScript / Ant Design 6 / ECharts / Zustand
-- **AI**: LangChain / DeepSeek / OpenAI / Anthropic / Gemini / Ollama
-- **基础设施**: MySQL 8.0 / Redis 7 / Docker / Nginx
+- 后端: Python 3.12+ / FastAPI / SQLAlchemy / Celery / Playwright
+- 前端: React 19 / TypeScript / Ant Design 6 / ECharts / Zustand
+- AI: LangChain / DeepSeek / OpenAI / Anthropic / Gemini / Ollama
+- 基础设施: MySQL 8.0 / Redis 7 / Docker / Nginx
 
 ## 项目结构
 
